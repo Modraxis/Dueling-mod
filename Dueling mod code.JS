@@ -332,13 +332,25 @@ game.modding.commands.unstuck = function (req) {
     game.modding.terminal.echo(ship.name + " was unstucked.\n");
 };
 
-game.modding.commands.kick = function (req) {
-    let args = req.replace(/^\s+/, "").replace(/\s+/, " ").split(" ");
-    let id = Number(args[1] || "NaN");
-    game.ships[id].gameover({
-        "You have been kicked": " ",
-    });
-    game.modding.terminal.echo(game.ships[id].name + " was kicked");
+game.modding.commands.kick = function(req) {
+  let args = req.trimStart().replace(/\s+/, " ").split(" "),
+    id = Number(args[1] || "NaN");
+  if (isNaN(id)) game.modding.terminal.error("Please specify an id to kick");
+  else {
+    let ship = game.findShip(id);
+    if (!ship) game.modding.terminal.error("Requested ship not found!");
+    else {
+      try {
+        ship.gameover({
+          "Info": "You've been kicked by the map host",
+          "Reason": args.slice(2, args.length).join(" ") || "No reason has been provided"
+        });
+        echo("Ship with id " + id + " was kicked");
+      } catch (e) {
+        game.modding.terminal.error("An error occured while kicking the requested ship!");
+      }
+    }
+  }
 };
 game.modding.commands.say = function (req) {
     let text = req.replace('say ', '');
